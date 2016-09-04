@@ -14,15 +14,15 @@
 /// an *arity* for that operation that generalizes the natural-number arity of
 /// ASTs to structures capturing the valence of arguments.
 public protocol Operator : Equatable, CustomStringConvertible {
-	associatedtype S : Sort
-	associatedtype I = LocallyNameless<Named>
+	associatedtype OperatorSort : Sort
+	associatedtype OperatorIndex = LocallyNameless<Named>
 
-	var arity : Arity<S> { get }
-	var support : [(Self.I, Self.S)] { get }
+	var arity : Arity<OperatorSort> { get }
+	var support : [(Self.OperatorIndex, Self.OperatorSort)] { get }
 }
 
 extension Operator {
-	public var support : [(Self.I, Self.S)] {
+	public var support : [(Self.OperatorIndex, Self.OperatorSort)] {
 		return []
 	}
 }

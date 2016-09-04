@@ -36,7 +36,7 @@ fileprivate enum CubicalSort : Sort {
 }
 
 fileprivate enum CubicalOperator : Operator {
-	typealias S = CubicalSort
+	typealias OperatorSort = CubicalSort
 
 	case FUN
 	case PROD

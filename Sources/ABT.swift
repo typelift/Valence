@@ -50,7 +50,7 @@ public protocol ABT {
 ///     - A: The type of annotations at each level of the syntax tree - e.g.
 ///          source locations.
 public struct AbstractBindingTree<V : Symbol, S : Symbol, M : Symbol, O : Operator, A> : ABT, CustomStringConvertible, Equatable
-	where O.I == LocallyNameless<S>
+	where O.OperatorIndex == LocallyNameless<S>
 {
 	private let abt : AbstractBindingTreeImpl<V, S, M, O, A>
 	private let an : A?
@@ -63,9 +63,9 @@ public struct AbstractBindingTree<V : Symbol, S : Symbol, M : Symbol, O : Operat
 	public typealias ABTView = View<V, S, M, O, A>
 	public typealias ABTBView = BindingView<V, S, M, O, A>
 	
-	public typealias MetaContext = Dictionary<M, Valence<O.S>> 
-	public typealias VariableContext = Dictionary<V, O.S>
-	public typealias SymbolContext = Dictionary<S, O.S>
+	public typealias MetaContext = Dictionary<M, Valence<O.OperatorSort>> 
+	public typealias VariableContext = Dictionary<V, O.OperatorSort>
+	public typealias SymbolContext = Dictionary<S, O.OperatorSort>
 	public typealias Context = (MetaContext, SymbolContext, VariableContext)
 
 	public typealias MetaEnv = Dictionary<M, BindingView<V, S, M, O, A>>
@@ -76,7 +76,7 @@ public struct AbstractBindingTree<V : Symbol, S : Symbol, M : Symbol, O : Operat
 	/// bindings, checks the sort of the variables in the arguments.
 	///
 	/// This is the `into` operation from CMU's ABT homework.
-	public init(checking view : View<V, S, M, O, A>, _ canSort : O.S) {
+	public init(checking view : View<V, S, M, O, A>, _ canSort : O.OperatorSort) {
 		switch view {
 		case let .Variable(x):
 			self.init(.Variable(.Free(x), canSort), nil)
@@ -87,7 +87,7 @@ public struct AbstractBindingTree<V : Symbol, S : Symbol, M : Symbol, O : Operat
 			}), nil)
 		case let .MetaApply(x, syms, ms):
 			let vsorts = ms.map { abt in abt.sort }
-			let freedSyms : [(LocallyNameless<S>, O.S)] = syms.map { (u, sort) in (.Free(u), sort) }
+			let freedSyms : [(LocallyNameless<S>, O.OperatorSort)] = syms.map { (u, sort) in (.Free(u), sort) }
 			self.init(makeMetaApp(x, canSort, freedSyms, zip(ms, vsorts).map { (m, sort) in
 				precondition(sort == m.sort)
 				return m
@@ -106,14 +106,14 @@ public struct AbstractBindingTree<V : Symbol, S : Symbol, M : Symbol, O : Operat
 	}
 
 	/// Pattern match on the view of an ABT and its sort.
-	public var infer : (View<V, S, M, O, A>, O.S) {
+	public var infer : (View<V, S, M, O, A>, O.OperatorSort) {
 		switch self.abt {
 		case let .Variable(v, sort):
 			return (.Variable(v.getFree), sort)
 		case let .Apply(op, args):
 			return (.Apply(op, args.ann.map { $0.infer.0 }), op.arity.sort)
 		case let .MetaApply((mv, term), syms, Ms):
-			let freedSyms : [(S, O.S)] = syms.map { (v, sort) in (v.getFree, sort) }
+			let freedSyms : [(S, O.OperatorSort)] = syms.map { (v, sort) in (v.getFree, sort) }
 			return (.MetaApply(mv, freedSyms, Ms.ann), term)
 		}
 	}
@@ -126,7 +126,7 @@ public struct AbstractBindingTree<V : Symbol, S : Symbol, M : Symbol, O : Operat
 	}
 
 	/// Pattern match on teh sort of an ABT.
-	public var sort : O.S {
+	public var sort : O.OperatorSort {
 		return self.infer.1
 	}
 
@@ -313,51 +313,51 @@ public struct AbstractBindingTree<V : Symbol, S : Symbol, M : Symbol, O : Operat
 		return AbstractBindingTree(f(self.abt), self.an)
 	}
 
-	fileprivate func liberateSymbolAnn(_ u : (S, O.S), _ coord : Coordinate) -> AbstractBindingTree<V, S, M, O, A> {
+	fileprivate func liberateSymbolAnn(_ u : (S, O.OperatorSort), _ coord : Coordinate) -> AbstractBindingTree<V, S, M, O, A> {
 		return self.map { m in
 			return m.liberateSymbol(u, coord)
 		}
 	}
 
-	fileprivate func liberateSymbols(_ u : [(S, O.S)]) -> AbstractBindingTree<V, S, M, O, A> {
+	fileprivate func liberateSymbols(_ u : [(S, O.OperatorSort)]) -> AbstractBindingTree<V, S, M, O, A> {
 		return foldStar(u, f: { v, c, M in
 			return M.liberateSymbolAnn(v, c)
 		}, t: self)
 	}
 
 
-	fileprivate func imprisonSymbolAnn(_ v : S, _ sort : O.S, _ coord : Coordinate) -> AbstractBindingTree<V, S, M, O, A> {
+	fileprivate func imprisonSymbolAnn(_ v : S, _ sort : O.OperatorSort, _ coord : Coordinate) -> AbstractBindingTree<V, S, M, O, A> {
 		return self.map { m in
 			return m.imprisonSymbol(v, sort, coord)
 		}
 	}
 
-	fileprivate func imprisonSymbols(_ u : [(S, O.S)]) -> AbstractBindingTree<V, S, M, O, A> {
+	fileprivate func imprisonSymbols(_ u : [(S, O.OperatorSort)]) -> AbstractBindingTree<V, S, M, O, A> {
 		return foldStar(u, f: { v, c, M in
 			return M.imprisonSymbolAnn(v.0, v.1, c)
 		}, t: self)
 	}
 
 
-	fileprivate func liberateVariableAnn(_ v : (V, O.S), _ coord : Coordinate) -> AbstractBindingTree<V, S, M, O, A> {
+	fileprivate func liberateVariableAnn(_ v : (V, O.OperatorSort), _ coord : Coordinate) -> AbstractBindingTree<V, S, M, O, A> {
 		return self.map { m in
 			return m.liberateVariable(v, coord)
 		}
 	}
 
-	fileprivate func liberateVariables(_ u : [(V, O.S)]) -> AbstractBindingTree<V, S, M, O, A> {
+	fileprivate func liberateVariables(_ u : [(V, O.OperatorSort)]) -> AbstractBindingTree<V, S, M, O, A> {
 		return foldStar(u, f: { v, c, M in
 			return M.liberateVariableAnn(v, c)
 		}, t: self)
 	}
 
-	fileprivate func imprisonVariableAnn(_ v : V, _ sort : O.S, _ coord : Coordinate) -> AbstractBindingTree<V, S, M, O, A> {
+	fileprivate func imprisonVariableAnn(_ v : V, _ sort : O.OperatorSort, _ coord : Coordinate) -> AbstractBindingTree<V, S, M, O, A> {
 		return self.map { m in
 			return m.imprisonVariable(v, sort, coord)
 		}
 	}
 
-	fileprivate func imprisonVariables(_ u : [(V, O.S)]) -> AbstractBindingTree<V, S, M, O, A> {
+	fileprivate func imprisonVariables(_ u : [(V, O.OperatorSort)]) -> AbstractBindingTree<V, S, M, O, A> {
 		return foldStar(u, f: { v, c, M in
 			return M.imprisonVariableAnn(v.0, v.1, c)
 		}, t: self)
@@ -368,7 +368,7 @@ public struct AbstractBindingTree<V : Symbol, S : Symbol, M : Symbol, O : Operat
 // MARK: Implementation Details Follow
 
 internal struct ContextAnnotatedTree<V : Symbol, S : Symbol, M : Symbol, O : Operator, A>
-	where O.I == LocallyNameless<S>
+	where O.OperatorIndex == LocallyNameless<S>
 {
 	let ann : A
 	let ctx : AbstractBindingTree<V, S, M, O, A>.Context
@@ -380,15 +380,15 @@ internal struct ContextAnnotatedTree<V : Symbol, S : Symbol, M : Symbol, O : Ope
 }
 
 indirect enum AbstractBindingTreeImpl<V : Symbol, S : Symbol, M : Symbol, O : Operator, A>
-	where O.I == LocallyNameless<S>
+	where O.OperatorIndex == LocallyNameless<S>
 {
 	public typealias Annotation = A
 
-	case Variable(LocallyNameless<V>, O.S)
+	case Variable(LocallyNameless<V>, O.OperatorSort)
 	case Apply(O, ContextAnnotatedTree<V, S, M, O, [Abstraction<V, S, M, O, A>]>)
-	case MetaApply((M, O.S), [(LocallyNameless<S>, O.S)], ContextAnnotatedTree<V, S, M, O, [AbstractBindingTree<V, S, M, O, A>]>)
+	case MetaApply((M, O.OperatorSort), [(LocallyNameless<S>, O.OperatorSort)], ContextAnnotatedTree<V, S, M, O, [AbstractBindingTree<V, S, M, O, A>]>)
 
-	func imprisonSymbol(_ v : S, _ sort : O.S, _ coord : Coordinate) -> AbstractBindingTreeImpl<V, S, M, O, A> {
+	func imprisonSymbol(_ v : S, _ sort : O.OperatorSort, _ coord : Coordinate) -> AbstractBindingTreeImpl<V, S, M, O, A> {
 		switch self {
 		case .Variable(_, _):
 			return self
@@ -411,7 +411,7 @@ indirect enum AbstractBindingTreeImpl<V : Symbol, S : Symbol, M : Symbol, O : Op
 		}
 	}
 	
-	func imprisonVariable(_ v : V, _ sort : O.S, _ coord : Coordinate) -> AbstractBindingTreeImpl<V, S, M, O, A> {
+	func imprisonVariable(_ v : V, _ sort : O.OperatorSort, _ coord : Coordinate) -> AbstractBindingTreeImpl<V, S, M, O, A> {
 		switch self {
 		case let .Variable(.Free(v2), sig):
 			if v == v2 {
@@ -432,7 +432,7 @@ indirect enum AbstractBindingTreeImpl<V : Symbol, S : Symbol, M : Symbol, O : Op
 		}
 	}
 	
-	func liberateSymbol(_ us : (S, O.S), _ coord : Coordinate) -> AbstractBindingTreeImpl<V, S, M, O, A> {
+	func liberateSymbol(_ us : (S, O.OperatorSort), _ coord : Coordinate) -> AbstractBindingTreeImpl<V, S, M, O, A> {
 		let (u, sort) = us
 		switch self {
 		case .Variable(_, _):
@@ -458,7 +458,7 @@ indirect enum AbstractBindingTreeImpl<V : Symbol, S : Symbol, M : Symbol, O : Op
 		}
 	}
 
-	func liberateVariable(_ vs : (V, O.S), _ coord : Coordinate) -> AbstractBindingTreeImpl<V, S, M, O, A> {
+	func liberateVariable(_ vs : (V, O.OperatorSort), _ coord : Coordinate) -> AbstractBindingTreeImpl<V, S, M, O, A> {
 		let (v, sort) = vs
 		switch self {
 		case .Variable(.Free(_), _):
@@ -481,19 +481,19 @@ indirect enum AbstractBindingTreeImpl<V : Symbol, S : Symbol, M : Symbol, O : Op
 }
 
 internal struct Abstraction<V : Symbol, S : Symbol, M : Symbol, O : Operator, A>
-	where O.I == LocallyNameless<S>
+	where O.OperatorIndex == LocallyNameless<S>
 {
-	let upsilon : [(String, O.S)]
-	let gamma : [(String, O.S)]
+	let upsilon : [(String, O.OperatorSort)]
+	let gamma : [(String, O.OperatorSort)]
 	let m : AbstractBindingTree<V, S, M, O, A>
 
-	init(_ upsilon : [(String, O.S)], _ gamma : [(String, O.S)], _ m : AbstractBindingTree<V, S, M, O, A>) {
+	init(_ upsilon : [(String, O.OperatorSort)], _ gamma : [(String, O.OperatorSort)], _ m : AbstractBindingTree<V, S, M, O, A>) {
 		self.upsilon = upsilon
 		self.gamma = gamma
 		self.m = m
 	}
 
-	init(checking b : BindingView<V, S, M, O, A>, _ v : Valence<O.S>) {
+	init(checking b : BindingView<V, S, M, O, A>, _ v : Valence<O.OperatorSort>) {
 		switch b {
 		case let .Binding(us, xs, m):
 			let (_, sort) = m.infer
@@ -504,7 +504,7 @@ internal struct Abstraction<V : Symbol, S : Symbol, M : Symbol, O : Operator, A>
 		}
 	}
 
-	public var infer : (BindingView<V, S, M, O, A>, Valence<O.S>) {
+	public var infer : (BindingView<V, S, M, O, A>, Valence<O.OperatorSort>) {
 		let syms = self.m.symbolContext
 		let vars = self.m.variableContext
 		let us = self.upsilon.map { (u, sort) in (S(fresh: syms, u), sort) }
@@ -557,7 +557,7 @@ private func makeApp<V : Symbol, S : Symbol, M : Symbol, O : Operator, A>(_ ops 
 	}))
 }
 
-private func makeMetaApp<V : Symbol, S : Symbol, M : Symbol, O : Operator, A>(_ mv : M, _ sort : O.S, _ us : [(LocallyNameless<S>, O.S)], _ ms : [AbstractBindingTree<V, S, M, O, A>]) -> AbstractBindingTreeImpl<V, S, M, O, A>
+private func makeMetaApp<V : Symbol, S : Symbol, M : Symbol, O : Operator, A>(_ mv : M, _ sort : O.OperatorSort, _ us : [(LocallyNameless<S>, O.OperatorSort)], _ ms : [AbstractBindingTree<V, S, M, O, A>]) -> AbstractBindingTreeImpl<V, S, M, O, A>
 {
 	func merge(_ l : AbstractBindingTree<V, S, M, O, A>.Context, _ r : AbstractBindingTree<V, S, M, O, A>.Context) -> AbstractBindingTree<V, S, M, O, A>.Context
 	{

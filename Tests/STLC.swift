@@ -34,7 +34,7 @@ fileprivate enum STLCSort : Sort {
 }
 
 fileprivate enum STLCOperator : Operator {
-	typealias S = STLCSort
+	typealias OperatorSort = STLCSort
 
 	case VAR(Named)
 	case LAM

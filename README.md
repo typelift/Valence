@@ -50,7 +50,7 @@ per operation that describes its binding structure.
 
 ```swift
 enum CalculatorOperator : Operator {
-	typealias S = CalculatorSort
+	typealias OperatorSort = CalculatorSort
 
 	case Num(Int)
 	case Plus

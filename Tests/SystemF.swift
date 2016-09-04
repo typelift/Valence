@@ -32,7 +32,7 @@ fileprivate enum SystemFSort : Sort {
 }
 
 fileprivate enum SystemFOperator : Operator {
-	typealias S = SystemFSort
+	typealias OperatorSort = SystemFSort
 
 	// λ (x : τ) . e
 	case LAM

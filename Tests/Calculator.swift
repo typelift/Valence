@@ -21,7 +21,7 @@ fileprivate enum CalculatorSort : Sort {
 }
 
 fileprivate enum CalculatorOperator : Operator {
-	typealias S = CalculatorSort
+	typealias OperatorSort = CalculatorSort
 
 	case Num(Int)
 	case Var(String)

@@ -8,20 +8,20 @@
 
 /// A pattern-match-enabled view of an annotated `AbstractSyntaxTree`.
 public enum View<V : Symbol, S : Symbol, M : Symbol, O : Operator, A>
-	where O.I == LocallyNameless<S>
+	where O.OperatorIndex == LocallyNameless<S>
 {
 	/// A variable binding.
 	case Variable(V)
 	/// An operator applied to a series of bindings.
 	case Apply(O, [BindingView<V, S, M, O, A>])
 	/// A metavariable applied to some series of symbols and terms.
-	case MetaApply(M, [(S, O.S)], [AbstractBindingTree<V, S, M, O, A>])
+	case MetaApply(M, [(S, O.OperatorSort)], [AbstractBindingTree<V, S, M, O, A>])
 }
 
 /// A pattern-match-enabled view of a term with access to a sequence of bound 
 /// symbols and variables and the body (rest of the syntax tree).
 public enum BindingView<V : Symbol, S : Symbol, M : Symbol, O : Operator, A> : CustomStringConvertible
-	where O.I == LocallyNameless<S>
+	where O.OperatorIndex == LocallyNameless<S>
 {
 	case Binding([S], [V], AbstractBindingTree<V, S, M, O, A>)
 
