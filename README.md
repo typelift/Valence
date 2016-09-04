@@ -1,3 +1,5 @@
+ [![Build Status](https://travis-ci.org/typelift/Valence.svg?branch=master)](https://travis-ci.org/typelift/Valence)
+
 # Valence
 
 Abstract Binding Trees for designing programming languages in Swift.
