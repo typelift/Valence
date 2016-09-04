@@ -6,6 +6,14 @@
 //  Copyright © 2016 CodaFi. All rights reserved.
 //
 
+/// The type of names of terms in a locally nameless representation.
+///
+/// Two names in a term are considered equal when they are the same name. In
+/// patterns, however, any two names are equal if they occur in the same place 
+/// within the pattern. This induces alpha equivalence on terms in general.
+///
+/// Names may either be free or bound. Free names may be extracted from patterns
+/// using `getFree`. Bound names cannot be.
 public enum LocallyNameless<A> : Hashable, CustomStringConvertible {
 	case Free(A)
 	case Bound(Coordinate)
@@ -50,7 +58,7 @@ public enum LocallyNameless<A> : Hashable, CustomStringConvertible {
 		case let .Free(v):
 			return v
 		case .Bound(_):
-			fatalError("Unexpectedly found bound variable while unwrapping free variable.")
+			fatalError("Unexpectedly found bound variable.")
 		}
 	}
 }
@@ -80,7 +88,7 @@ public struct Coordinate : Equatable {
 		return Coordinate((i + 1, j))
 	}
 
-  public static func == (l : Coordinate, r : Coordinate) -> Bool {
-    return l.coord == r.coord
-  }
+	public static func == (l : Coordinate, r : Coordinate) -> Bool {
+		return l.coord == r.coord
+	}
 }

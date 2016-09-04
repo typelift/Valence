@@ -6,63 +6,6 @@
 //  Copyright © 2016 CodaFi. All rights reserved.
 //
 
-/*
-/// Nameless variables ["de Bruijn indices"]
-public struct Nameless : Symbol {
-	private let unVariable : UInt
-	
-	public init() {
-		self.unVariable = Nameless.freshVariable()
-	}
-	
-	private init(copying : UInt) {
-		self.unVariable = copying
-	}
-	
-	public var fresh : Nameless {
-		return Nameless()
-	}
-	
-	public var copy : Nameless {
-		return Nameless(copying: self.unVariable)
-	}
-	
-	public var hashValue : Int {
-		return Int(self.unVariable)
-	}
-	
-	public var description : String {
-		return String(self.unVariable)
-	}
-	
-	static var _varPool : UInt = 0
-	
-	static func freshVariable() -> UInt {
-		_varPool += 1;
-		return _varPool
-	}
-}
-
-public func <=(lhs : Nameless, rhs : Nameless) -> Bool {
-	return lhs.unVariable <= rhs.unVariable
-}
-
-public func >=(lhs : Nameless, rhs : Nameless) -> Bool {
-	return lhs.unVariable >= rhs.unVariable
-}
-
-public func >(lhs : Nameless, rhs : Nameless) -> Bool {
-	return lhs.unVariable > rhs.unVariable
-}
-
-public func <(lhs : Nameless, rhs : Nameless) -> Bool {
-	return lhs.unVariable < rhs.unVariable
-}
-
-public func ==(lhs : Nameless, rhs : Nameless) -> Bool {
-	return lhs.unVariable == rhs.unVariable
-}*/
-
 /// Named variables; Reference equality is needed because strings have value semantics.
 public struct Named : Symbol {
 	private let unVariable : String
