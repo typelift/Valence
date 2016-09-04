@@ -128,7 +128,7 @@ typealias CalculatorTerm = AbstractBindingTree<Named, Named, Named, CalculatorOp
 
 # System Requirements
 
-Valence supports OS X 10.9+ and iOS 7.0+
+Valence supports OS X 10.9+, iOS 8.0+, tvOS 9.0+, and watchOS 2.0+.
 
 # License
 
